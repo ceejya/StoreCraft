@@ -1,3 +1,50 @@
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Palette: Slate foundation + Emerald accent */
+  --color-bg:        #f4f6f9;
+  --color-surface:   #ffffff;
+  --color-border:    #e2e7ef;
+  --color-border-focus: #10b981;
+  --color-text:      #0f1729;
+  --color-text-secondary: #5b6578;
+  --color-text-muted: #8994a7;
+  --color-accent:    #10b981;
+  --color-accent-hover: #059669;
+  --color-accent-soft: rgba(16, 185, 129, 0.10);
+  --color-accent-ring: rgba(16, 185, 129, 0.22);
+  --color-error:     #e11d48;
+  --color-error-bg:  #fef2f4;
+  --color-error-border: #fecdd3;
+  --color-brand-panel: #0f1729;
+  --color-brand-text: #e2e7ef;
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Radii */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+
+  /* Shadows */
+  --shadow-card:     0 1px 3px rgba(15, 23, 41, 0.04), 0 8px 24px rgba(15, 23, 41, 0.06);
+  --shadow-input:    0 1px 2px rgba(15, 23, 41, 0.04);
+  --shadow-btn:      0 1px 2px rgba(16, 185, 129, 0.12), 0 6px 16px rgba(16, 185, 129, 0.18);
+  --shadow-btn-hover: 0 2px 4px rgba(16, 185, 129, 0.16), 0 10px 24px rgba(16, 185, 129, 0.24);
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration: 180ms;
+}
+
+/* ================================================================
+   GLOBAL RESET & BASE
+   ================================================================ */
 * {
   box-sizing: border-box;
 }
@@ -5,15 +52,540 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: #eef2f7;
-  color: #172033;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
 input,
 textarea {
   font: inherit;
+}
+
+/* ================================================================
+   BROWSER SURFACE THEMING (Impeccable Craft Floor 3.4)
+   ================================================================ */
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: none; /* handled by border + ring instead */
+}
+
+/* Scrollbar theming (webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c8ced8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ================================================================
+   AUTH PAGES (Signup & Login): Cobalt & Bone
+   Design Read: unbranded product + live-chat marketplace for makers
+   and buyers; calm editorial language; split screen with a real
+   still-life photo. Dials: VARIANCE 7 · MOTION 4 · DENSITY 3.
+   Tokens are scoped to .auth-page so other screens are unaffected.
+   ================================================================ */
+.auth-page {
+  /* Palette: one accent (cobalt), cool bone neutrals */
+  --a-bg:           #f2f1ed;
+  --a-surface:      #fbfaf7;
+  --a-ink:          #14161c;  /* 16.9:1 on bg */
+  --a-ink-2:        #4b4f5c;  /* 7.2:1 on bg  */
+  --a-ink-3:        #646875;  /* 5.0:1 on bg, placeholder/hints */
+  --a-line:         #d6d3cb;
+  --a-line-strong:  #a9a59c;
+  --a-accent:       #2440c8;  /* white text 8.5:1 */
+  --a-accent-press: #1b32a3;
+  --a-accent-soft:  rgba(36, 64, 200, 0.10);
+  --a-accent-ring:  rgba(36, 64, 200, 0.24);
+  --a-ok:           #1f6f4a;
+  --a-error:        #b42318;  /* 5.9:1 on bg */
+  --a-error-soft:   #fbebe8;
+  --a-error-line:   #f1c4bd;
+
+  --a-font:      'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --a-font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+
+  --a-radius:    10px;
+  --a-radius-lg: 22px;
+  --a-ease:      cubic-bezier(0.22, 1, 0.36, 1);
+  --a-fast:      160ms;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  min-height: 100dvh;
+  background: var(--a-bg);
+  color: var(--a-ink);
+  font-family: var(--a-font);
+  font-feature-settings: "ss01", "cv11";
+}
+
+.auth-page ::selection {
+  background: var(--a-accent);
+  color: #ffffff;
+}
+
+.auth-page :focus-visible {
+  outline: 2px solid var(--a-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.auth-page p,
+.auth-page h1,
+.auth-page figure {
+  margin: 0;
+}
+
+/* — Form column — */
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 28px clamp(24px, 6vw, 96px) 40px;
+}
+
+.auth-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-switch {
+  font-size: 0.875rem;
+  color: var(--a-ink-2);
+}
+
+.auth-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 408px;
+  padding: 56px 0 24px;
+  animation: auth-rise 520ms var(--a-ease) both;
+}
+
+.auth-intro {
+  margin-bottom: 36px;
+}
+
+.auth-page .auth-step {
+  margin-bottom: 18px;
+  font-family: var(--a-font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--a-accent);
+}
+
+.auth-title {
+  font-family: var(--a-font);
+  font-size: clamp(2.125rem, 1.4rem + 2vw, 2.875rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--a-ink);
+  text-wrap: balance;
+}
+
+.auth-page .auth-lede {
+  margin-top: 14px;
+  max-width: 36ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--a-ink-2);
+  text-wrap: pretty;
+}
+
+/* — Links — */
+.auth-link {
+  color: var(--a-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--a-line-strong);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  transition: color var(--a-fast) var(--a-ease), text-decoration-color var(--a-fast) var(--a-ease);
+}
+
+.auth-link:hover {
+  color: var(--a-accent);
+  text-decoration-color: currentColor;
+}
+
+/* — Form & fields — */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--a-ink);
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px;
+  border: 1px solid var(--a-line);
+  border-radius: var(--a-radius);
+  background: var(--a-surface);
+  color: var(--a-ink);
+  font-family: var(--a-font);
+  font-size: 1rem; /* ≥16px stops iOS zoom-on-focus */
+  caret-color: var(--a-accent);
+  box-shadow: inset 0 1px 2px rgba(20, 22, 28, 0.04);
+  transition:
+    border-color var(--a-fast) var(--a-ease),
+    box-shadow var(--a-fast) var(--a-ease),
+    background-color var(--a-fast) var(--a-ease);
+}
+
+.auth-input.has-toggle {
+  padding-right: 52px;
+}
+
+.auth-input::placeholder {
+  color: var(--a-ink-3);
+}
+
+.auth-input:hover {
+  border-color: var(--a-line-strong);
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--a-accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px var(--a-accent-ring);
+}
+
+/* Keep autofill on-palette instead of browser yellow/blue */
+.auth-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--a-ink);
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  caret-color: var(--a-accent);
+}
+
+.auth-field.has-error .auth-input {
+  border-color: var(--a-error);
+}
+
+.auth-field.has-error .auth-input:focus {
+  box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.16);
+}
+
+.auth-field-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--a-ink-3);
+  transition: color var(--a-fast) var(--a-ease);
+}
+
+.auth-field-msg.is-met {
+  color: var(--a-ok);
+}
+
+.auth-field-msg.is-error {
+  color: var(--a-error);
+  font-weight: 500;
+  animation: auth-fade 200ms var(--a-ease) both;
+}
+
+.auth-field-msg svg {
+  flex-shrink: 0;
+}
+
+/* Password reveal toggle */
+.auth-reveal {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--a-ink-3);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--a-fast) var(--a-ease), background-color var(--a-fast) var(--a-ease);
+}
+
+.auth-reveal:hover {
+  color: var(--a-ink);
+  background: var(--a-accent-soft);
+}
+
+.auth-reveal:focus-visible {
+  outline-offset: 0;
+}
+
+/* — Submit — */
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: var(--a-radius);
+  background: var(--a-accent);
+  color: #ffffff;
+  font-family: var(--a-font);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 1px 2px rgba(20, 22, 28, 0.10),
+    0 8px 18px -8px rgba(36, 64, 200, 0.55);
+  transition:
+    background-color var(--a-fast) var(--a-ease),
+    box-shadow var(--a-fast) var(--a-ease),
+    transform var(--a-fast) var(--a-ease);
+}
+
+.auth-submit-icon {
+  transition: transform 220ms var(--a-ease);
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: var(--a-accent-press);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 4px rgba(20, 22, 28, 0.10),
+    0 12px 24px -10px rgba(36, 64, 200, 0.6);
+  transform: translateY(-1px);
+}
+
+.auth-submit:hover:not(:disabled) .auth-submit-icon {
+  transform: translateX(3px);
+}
+
+.auth-submit:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(20, 22, 28, 0.12);
+}
+
+.auth-submit:disabled {
+  cursor: progress;
+  background: #5068d4;
+  box-shadow: none;
+}
+
+.auth-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: auth-spin 0.7s linear infinite;
+}
+
+/* — Server error banner — */
+.auth-alert {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border: 1px solid var(--a-error-line);
+  border-radius: var(--a-radius);
+  background: var(--a-error-soft);
+  color: var(--a-error);
+  animation: auth-fade 220ms var(--a-ease) both;
+}
+
+.auth-alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.auth-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-alert-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.auth-alert-action {
+  align-self: flex-start;
+  font-size: 0.875rem;
+}
+
+/* — Visual column — */
+.auth-visual {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: 14px 14px 14px 0;
+}
+
+.auth-visual-frame {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--a-radius-lg);
+  background: #ecebe8;
+}
+
+.auth-visual-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 78%;
+  animation: auth-settle 1200ms var(--a-ease) both;
+}
+
+/* Caption sits in the photo's empty upper wall */
+.auth-visual-caption {
+  position: absolute;
+  top: clamp(32px, 7vh, 72px);
+  left: clamp(28px, 4vw, 56px);
+  right: clamp(28px, 4vw, 56px);
+  max-width: 22ch;
+  animation: auth-rise 700ms 120ms var(--a-ease) both;
+}
+
+.auth-visual-headline {
+  font-size: clamp(1.75rem, 1rem + 1.6vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--a-ink);
+  text-wrap: balance;
+}
+
+.auth-page .auth-visual-sub {
+  margin-top: 14px;
+  max-width: 32ch;
+  font-size: 0.975rem;
+  line-height: 1.55;
+  color: var(--a-ink-2);
+}
+
+/* — Motion — */
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes auth-fade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes auth-settle {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* — Responsive — */
+@media (max-width: 960px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-panel {
+    padding: 20px 24px 32px;
+  }
+
+  .auth-panel-body {
+    margin: 0 auto;
+    padding-top: 40px;
+  }
+}
+
+@media (max-width: 440px) {
+  .auth-panel {
+    padding: 16px 20px 28px;
+  }
+
+  .auth-topbar {
+    justify-content: flex-start;
+  }
+
+  .auth-panel-body {
+    justify-content: flex-start;
+    padding-top: 48px;
+  }
+
+  .auth-intro {
+    margin-bottom: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page *,
+  .auth-page *::before,
+  .auth-page *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+
+  .auth-spinner {
+    animation: auth-spin 1.4s linear infinite !important;
+  }
 }
 
 .add-product-page {
