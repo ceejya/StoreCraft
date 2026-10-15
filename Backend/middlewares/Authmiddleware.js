@@ -8,14 +8,15 @@ const Authverify = async (req, res, next) => {
       }
       const verifiedToken = await jwt.verify(token, process.env.JWT_SECERETKEY)
       console.log(verifiedToken);
-      if (verifiedToken) {
-         req.user = verifiedToken.email
-         next()
-      }
+   if (verifiedToken) {
+      req.user = verifiedToken.email
+      next()
+      
+   }
    } catch (error) {
       res.status(500).json({ message: error.message, status: false })
    }
-}
+} 
 
 
 

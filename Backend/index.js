@@ -9,52 +9,50 @@ const cors = require("cors")
 const chatmodel = require("./module/chat.model")
 
 app.use(cors({ origin: "*" }))
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "50mb" }))
 app.use("/user", userrouter)
 app.use("/product", productrouter)
 
-
-
-connect()
 const port = 8004
-const connection = app.listen(port, () => {
-    console.log(`app started at port ${port}`);
 
-})
+const startServer = async () => {
+    try {
+        // Do not accept HTTP or socket requests until MongoDB is ready.
+        await connect()
 
+        const connection = app.listen(port, () => {
+            console.log(`app started at port ${port}`)
+        })
 
+        const io = socket(connection, {
+            cors: { origin: "*" }
+        })
 
-const io = socket(connection, {
-    cors: { origin: "*" }
-})
+        io.on("connection", async (clientSocket) => {
+            console.log("a user connected")
 
+            try {
+                const recentchat = await chatmodel.find().populate("sender", "username")
+                clientSocket.emit("refreshmessage", recentchat)
+            } catch (error) {
+                console.error("Could not load recent chat messages:", error.message)
+                clientSocket.emit("chaterror", { message: "Could not load chat messages" })
+            }
 
+            clientSocket.on("sendmessage", async (incomingmessage) => {
+                try {
+                    const newchat = await chatmodel.create(incomingmessage)
+                    clientSocket.emit("resend", newchat)
+                } catch (error) {
+                    console.error("Could not save chat message:", error.message)
+                    clientSocket.emit("chaterror", { message: "Could not send chat message" })
+                }
+            })
+        })
+    } catch (error) {
+        console.error("Server could not start because MongoDB is unavailable:", error.message)
+        process.exit(1)
+    }
+}
 
-
-io.on("connection", async (socket) => {
-    console.log("a user connected");
-    const recentchat = await chatmodel.find().populate("sender", "username")
-    socket.emit("refreshmessage", recentchat)
-
-
-    socket.on("sendmessage", async (incomingmessage) => {
-        console.log(incomingmessage);
-        const newchat = await chatmodel.create(incomingmessage)
-        socket.emit("resend", incomingmessage)
-    })
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const allmessage = await chatmodel.find().populate("sender", "username")
-// socket.emit("sendallmessage", allmessage)
+startServer()

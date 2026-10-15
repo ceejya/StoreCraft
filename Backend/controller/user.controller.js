@@ -135,8 +135,6 @@ const Login = async (req, res) => {
 
         if (!existingUser.isVerified) {
             return res.status(400).json({ message: "email is not verified, check your mail.", status: false });
-
-
         }
         const token = await jwt.sign({ email }, process.env.JWT_SECERETKEY, { expiresIn: "2hr" })
         return res.status(200).json({ message: "login successful", token, status: true });
@@ -168,7 +166,6 @@ const ProfileUpload = async (req, res) => {
         if (imageid) {
             await cloudinary.uploader.destroy(imageid)
         }
-
 
 
         const uploadedimage = await cloudinary.uploader.upload(image)

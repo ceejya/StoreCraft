@@ -1,6 +1,6 @@
 const cloudinary = require("../Utils/Cloudinary")
 const productmodel = require("../module/product.model")
-
+const usermodel = require("../module/user.model")
 
 
 const addProduct = async (req, res) => {
@@ -11,9 +11,19 @@ const addProduct = async (req, res) => {
             return res.status(400).json({ message: "All fields are mandatory", status: false })
         }
 
+        const seller = await usermodel.findOne({email: req.user}).select("_id");
+        console.log(seller);
+        
+
+        if (!seller) {
+            return res.status(400).json({ message: "session expired"})
+            
+        }
+       
+
         const uploadedimage = await cloudinary.uploader.upload(productimage, { folder: "productspage" })
         console.log(uploadedimage);
-        const newProduct = await productmodel.create({ ...req.body, productimage: uploadedimage.secure_url })
+        const newProduct = await productmodel.create({ ...req.body,seller: seller._id, productimage: uploadedimage.secure_url })
         if (newProduct) {
             return res.status(200).json({ message: "created product", status: true })
         }
@@ -21,10 +31,7 @@ const addProduct = async (req, res) => {
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: error.message, status: false })
-
-
     }
-
 }
 
 const getallproduct = async (req, res) => {
