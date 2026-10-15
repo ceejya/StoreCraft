@@ -1,9 +1,11 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const AddProduct = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [productinfo, setProductinfo] = useState({
     productname: "",
@@ -48,7 +50,6 @@ const AddProduct = () => {
         productprice: "",
         stock: "",
         productimage: "",
-        
         productdescription: ""
       });
     } catch (error) {
@@ -60,121 +61,146 @@ const AddProduct = () => {
     }
   };
 
-  // const reader = new FileReader()
-  // reader.onloadend = () => setProductinfo({ ...productinfo, productimage: reader.result }); reader.readAsDataURL(file);
-
-
-
   return (
-    <main className="add-product-page">
-      <section className="add-product-shell">
-        <div className="add-product-header">
+    <main className="sc-form-page">
+      {/* Back link */}
+      <div className="container-fluid" style={{ maxWidth: 980 }}>
+        <a href="/Dashboard" className="sc-back-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          Back to Dashboard
+        </a>
+      </div>
+
+      <section className="sc-form-shell container-fluid" style={{ maxWidth: 980 }}>
+        {/* Header */}
+        <div className="sc-form-header">
           <div>
-            <p className="add-product-eyebrow">Inventory</p>
-            <h1>Add Product</h1>
+            <p className="sc-eyebrow">Inventory</p>
+            <h1 className="sc-page-title">Add Product</h1>
           </div>
         </div>
 
-        <form className="add-product-form">
-          <div className="form-grid">
-            <div className="field-group">
-              <label htmlFor="productname">Product name</label>
-              <input
-                id="productname"
-                name="productname"
-                type="text"
-                value={productinfo.productname}
-                onChange={(e) => setProductinfo({ ...productinfo, productname: e.target.value })}
-
-                placeholder="Enter product name"
-              />
+        <form className="sc-form-body" onSubmit={(e) => e.preventDefault()}>
+          {/* Basic info row */}
+          <div className="row g-3">
+            <div className="col-12 col-md-4">
+              <div className="sc-field">
+                <label htmlFor="productname" className="sc-label">Product name</label>
+                <input
+                  id="productname"
+                  className="sc-input"
+                  type="text"
+                  value={productinfo.productname}
+                  onChange={(e) => setProductinfo({ ...productinfo, productname: e.target.value })}
+                  placeholder="e.g. Ceramic Mug"
+                />
+              </div>
             </div>
-
-            <div className="field-group">
-              <label htmlFor="productprice">Product price</label>
-              <input
-                id="productprice"
-                name="productprice"
-                type="number"
-                min="0"
-                value={productinfo.productprice}
-                onChange={(e) => setProductinfo({ ...productinfo, productprice: e.target.value })}
-                step="0.01"
-                placeholder="0.00"
-              />
+            <div className="col-12 col-md-4">
+              <div className="sc-field">
+                <label htmlFor="productprice" className="sc-label">Price</label>
+                <div className="sc-input-prefix-wrap">
+                  <span className="sc-input-prefix">$</span>
+                  <input
+                    id="productprice"
+                    className="sc-input sc-input--prefixed"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productinfo.productprice}
+                    onChange={(e) => setProductinfo({ ...productinfo, productprice: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
             </div>
-
-            <div className="field-group">
-              <label htmlFor="stock">Stock</label>
-              <input
-                id="stock"
-                name="stock"
-                type="number"
-                min="0"
-                value={productinfo.stock}
-                onChange={(e) => setProductinfo({ ...productinfo, stock: e.target.value })}
-                placeholder="Available quantity"
-              />
-            </div>
-          </div>
-
-          <div className="form-grid product-details-grid">
-            <div className="field-group description-field">
-              <label htmlFor="productdescription">Product description</label>
-              <textarea
-                id="productdescription"
-                name="productdescription"
-                value={productinfo.productdescription}
-                onChange={(e) => setProductinfo({ ...productinfo, productdescription: e.target.value })}
-                placeholder="Write a clear description of the product"
-              />
-            </div>
-
-            <div className="field-group image-field">
-              <label htmlFor="productimage">Product image</label>
-
-              {/* Change <button> to <label htmlFor="productimage"> */}
-              <label htmlFor="productimage" className="upload-box">
-                {/* <span className="upload-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" role="img">
-                    <path d="M12 3.75 17.25 9l-1.06 1.06-3.44-3.43v9.62h-1.5V6.63l-3.44 3.43L6.75 9 12 3.75Z" />
-                    <path d="M5.25 18.75h13.5v-4.5h1.5v6H3.75v-6h1.5v4.5Z" />
-                  </svg>
-                </span>
-                <strong>Upload product image</strong>
-                <span>Click to choose an image</span> */}
-                {productinfo.productimage ? (
-                  <img src={productinfo.productimage} alt="preview" style={{ width: "100%", height: "180px", objectFit: "cover" }} />
-
-                ) : (
-                  <><span className="upload-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" role="img">
-                      <path d="M12 3.75 17.25 9l-1.06 1.06-3.44-3.43v9.62h-1.5V6.63l-3.44 3.43L6.75 9 12 3.75Z" />
-                      <path d="M5.25 18.75h13.5v-4.5h1.5v6H3.75v-6h1.5v4.5Z" />
-                    </svg>
-                  </span>
-                    <strong>Upload product image</strong>
-                    <span>Click to choose an image</span>
-                  </>)}
-              </label>
-
-
-
-              <input
-                id="productimage"
-                name="productimage"
-                type="file"
-                placeholder="okayyy"
-                accept="image/*"
-                className="visually-hidden-file"
-                onChange={handleImageUpload}
-              />
+            <div className="col-12 col-md-4">
+              <div className="sc-field">
+                <label htmlFor="stock" className="sc-label">Stock quantity</label>
+                <input
+                  id="stock"
+                  className="sc-input"
+                  type="number"
+                  min="0"
+                  value={productinfo.stock}
+                  onChange={(e) => setProductinfo({ ...productinfo, stock: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="form-actions">
-            <button onClick={handleproduct} disabled={isLoading} className="submit-product-btn" type="button">
-              {isLoading ? "Adding product..." : "Add product"}
+          {/* Description + Image */}
+          <div className="row g-3">
+            <div className="col-12 col-md-7">
+              <div className="sc-field">
+                <label htmlFor="productdescription" className="sc-label">Description</label>
+                <textarea
+                  id="productdescription"
+                  className="sc-textarea"
+                  value={productinfo.productdescription}
+                  onChange={(e) => setProductinfo({ ...productinfo, productdescription: e.target.value })}
+                  placeholder="Describe your product – materials, dimensions, care instructions…"
+                />
+              </div>
+            </div>
+            <div className="col-12 col-md-5">
+              <div className="sc-field">
+                <label className="sc-label">Product image</label>
+                <label
+                  htmlFor="productimage"
+                  className={`sc-upload ${productinfo.productimage ? 'sc-upload--has' : ''}`}
+                  tabIndex={0}
+                >
+                  {productinfo.productimage ? (
+                    <>
+                      <img src={productinfo.productimage} alt="Preview" className="sc-upload-preview"/>
+                      <span className="sc-upload-change">Click to change image</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="sc-upload-icon" aria-hidden="true">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 3.75 17.25 9l-1.06 1.06-3.44-3.43v9.62h-1.5V6.63l-3.44 3.43L6.75 9 12 3.75Z"/>
+                          <path d="M5.25 18.75h13.5v-4.5h1.5v6H3.75v-6h1.5v4.5Z"/>
+                        </svg>
+                      </span>
+                      <strong className="sc-upload-label">Upload product image</strong>
+                      <span className="sc-upload-hint">JPG, PNG or WebP · max 5 MB</span>
+                    </>
+                  )}
+                </label>
+                <input
+                  id="productimage"
+                  type="file"
+                  accept="image/*"
+                  className="visually-hidden-file"
+                  onChange={handleImageUpload}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="sc-form-actions">
+            <button
+              type="button"
+              className="sc-btn-ghost"
+              onClick={() => navigate('/Dashboard')}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleproduct}
+              disabled={isLoading}
+              className="sc-btn"
+              type="button"
+            >
+              {isLoading ? (
+                <><span className="sc-spinner" aria-hidden="true"/>Adding…</>
+              ) : (
+                'Add product'
+              )}
             </button>
           </div>
         </form>

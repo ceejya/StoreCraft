@@ -63,17 +63,12 @@ const verifyOtp = async (req, res) => {
         const { otp, email } = req.body
         if (!otp) {
             return res.status(400).json({ message: "All fields are mandatory", status: false })
-
         }
-
-
         const existotp = await otpmodel.findOne({ otp })
         console.log(existotp);
 
 
         if (existotp) {
-
-
             const verifieduser = await usermodel.findOneAndUpdate(
                 { email: existotp.email },
                 { isVerified: true },
@@ -103,7 +98,7 @@ const Verifytoken = async (req, res) => {
         const verifiedToken = await jwt.verify(token, process.env.JWT_SECERETKEY)
         if (verifiedToken) {
             const currentUser = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture")
-            console.log(currentUser);
+             console.log(currentUser);
             return res.status(200).json({ message: "token verified", currentUser, status: true })
         }
     } catch (error) {
@@ -131,7 +126,6 @@ const Login = async (req, res) => {
         const existingUser = await usermodel.findOne({ email })
 
         if (!existingUser) {
-
             return res.status(404).json({ message: "user not found", status: false });
         }
         const correctPassword = await bcryptjs.compare(password, existingUser.password)
