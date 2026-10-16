@@ -58,6 +58,7 @@ const getallproduct = async (req, res) => {
         return res.status(500).json({ message: error.message, status: false })
     }
 }
+  
 
 
 module.exports = { addProduct, getallproduct }

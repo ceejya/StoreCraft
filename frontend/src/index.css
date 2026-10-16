@@ -828,6 +828,66 @@ textarea:focus-visible {
   color: var(--c-ink);
 }
 
+/* Shop setup prompt shown to sellers without a public shop name. */
+.sc-shop-setup {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  gap: 32px;
+  align-items: start;
+  padding: 26px 28px;
+  border: 1px solid var(--c-line);
+  border-left: 4px solid var(--c-accent);
+  border-radius: 12px;
+  background: var(--c-surface);
+  box-shadow: 0 8px 20px rgba(20, 22, 28, 0.045);
+}
+
+.sc-shop-setup-copy h2 {
+  margin: 0;
+  color: var(--c-ink);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.sc-shop-setup-copy > p:last-child {
+  max-width: 48ch;
+  margin: 10px 0 0;
+  color: var(--c-ink-2);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.sc-shop-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sc-shop-setup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.sc-shop-link-preview {
+  margin: 0;
+  color: var(--c-ink-2);
+  font-family: var(--f-mono);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.sc-shop-setup-note {
+  margin: 0;
+  color: var(--c-ink-3);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
 /* ── Primary CTA button (cobalt) ── */
 .sc-btn {
   display: inline-flex;
@@ -1407,6 +1467,12 @@ textarea:focus-visible {
   }
 
   .sc-btn { width: 100%; justify-content: center; }
+
+  .sc-shop-setup {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 22px 20px;
+  }
 
   .sc-form-header { padding: 20px; }
   .sc-form-body { padding: 20px; }

@@ -8,6 +8,21 @@ const Dashboard = () => {
     const [currentUser, setCurrentUser] = useState(null)
     const [products, setProducts] = useState([])
     const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+    const [shopNameDraft, setShopNameDraft] = useState('')
+    const [shopNamePreview, setShopNamePreview] = useState('')
+
+    const shopSlugPreview = shopNameDraft
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+
+    const handleShopNamePreview = (event) => {
+        event.preventDefault()
+        if (!shopSlugPreview) return
+        setShopNamePreview(shopSlugPreview)
+    }
 
     useEffect(() => {
         axios.get("http://localhost:8004/user/verifytoken", {
@@ -110,6 +125,45 @@ const Dashboard = () => {
                         Add Product
                     </button>
                 </div>
+
+                {currentUser && !currentUser.shopName && (
+                    <section className="sc-shop-setup" aria-labelledby="shop-setup-title">
+                        <div className="sc-shop-setup-copy">
+                            <p className="sc-eyebrow">Your public storefront</p>
+                            <h2 id="shop-setup-title">Give your shop a name</h2>
+                            <p>Choose the name customers will see in your shop link. You can use your business name, like “Amara Shoes.”</p>
+                        </div>
+                        <form className="sc-shop-setup-form" onSubmit={handleShopNamePreview}>
+                            <label htmlFor="shop-name" className="sc-label">Shop name</label>
+                            <input
+                                id="shop-name"
+                                className="sc-input"
+                                type="text"
+                                value={shopNameDraft}
+                                onChange={(event) => {
+                                    setShopNameDraft(event.target.value)
+                                    setShopNamePreview('')
+                                }}
+                                placeholder="e.g. Amara Shoes"
+                                autoComplete="organization"
+                                required
+                            />
+                            <div className="sc-shop-setup-footer">
+                                <p className="sc-shop-link-preview" aria-live="polite">
+                                    {shopNamePreview
+                                        ? `Your link will look like ${window.location.origin}/shop/${shopNamePreview}`
+                                        : shopSlugPreview
+                                            ? `Link preview: ${window.location.origin}/shop/${shopSlugPreview}`
+                                            : 'Your shop link will appear here.'}
+                                </p>
+                                <button className="sc-btn" type="submit" disabled={!shopSlugPreview}>
+                                    Preview shop link
+                                </button>
+                            </div>
+                            <p className="sc-shop-setup-note">This previews the link format. Saving the name and checking that it is available will be connected next.</p>
+                        </form>
+                    </section>
+                )}
 
                 {/* Stats */}
                 <div className="row g-3 mb-4">

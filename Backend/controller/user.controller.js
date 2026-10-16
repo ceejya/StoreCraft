@@ -97,7 +97,7 @@ const Verifytoken = async (req, res) => {
         }
         const verifiedToken = await jwt.verify(token, process.env.JWT_SECERETKEY)
         if (verifiedToken) {
-            const currentUser = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture")
+            const currentUser = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture shopName")
              console.log(currentUser);
             return res.status(200).json({ message: "token verified", currentUser, status: true })
         }

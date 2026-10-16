@@ -10,5 +10,6 @@ productrouter.post("/addproducts", Authverify,  addProduct)
 productrouter.get("/fetch/product", getallproduct)
 
 
+
 module.exports = productrouter
 
