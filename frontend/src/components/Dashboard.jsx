@@ -10,6 +10,9 @@ const Dashboard = () => {
     const [isLoadingProducts, setIsLoadingProducts] = useState(true)
     const [shopNameDraft, setShopNameDraft] = useState('')
     const [shopNamePreview, setShopNamePreview] = useState('')
+    const [isSavingShopName, setIsSavingShopName] = useState(false)
+    const [shopNameError, setShopNameError] = useState('')
+    const [shopLinkCopied, setShopLinkCopied] = useState(false)
 
     const shopSlugPreview = shopNameDraft
         .toLowerCase()
@@ -18,11 +21,41 @@ const Dashboard = () => {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
-    const handleShopNamePreview = (event) => {
+    const handleShopNameSubmit = async (event) => {
         event.preventDefault()
-        if (!shopSlugPreview) return
-        setShopNamePreview(shopSlugPreview)
+        if (!shopSlugPreview || !token) return
+
+        setIsSavingShopName(true)
+        setShopNameError('')
+        try {
+            const response = await axios.patch(
+                "http://localhost:8004/user/shop-name",
+                { storeName: shopNameDraft },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            setCurrentUser(response.data.currentUser)
+            setShopNamePreview(response.data.currentUser.shopName)
+        } catch (error) {
+            setShopNameError(error.response?.data?.message || 'Could not save your shop name. Please try again.')
+        } finally {
+            setIsSavingShopName(false)
+        }
     }
+
+    const shopLink = currentUser?.shopName
+        ? `${window.location.origin}/shop/${currentUser.shopName}`
+        : ''
+
+    const handleCopyShopLink = async () => {
+        try {
+            await navigator.clipboard.writeText(shopLink)
+            setShopLinkCopied(true)
+            window.setTimeout(() => setShopLinkCopied(false), 1800)
+        } catch {
+            setShopNameError('Could not copy the link. Copy it from the link text instead.')
+        }
+    }
+
 
     useEffect(() => {
         axios.get("http://localhost:8004/user/verifytoken", {
@@ -133,7 +166,7 @@ const Dashboard = () => {
                             <h2 id="shop-setup-title">Give your shop a name</h2>
                             <p>Choose the name customers will see in your shop link. You can use your business name, like “Amara Shoes.”</p>
                         </div>
-                        <form className="sc-shop-setup-form" onSubmit={handleShopNamePreview}>
+                        <form className="sc-shop-setup-form" onSubmit={handleShopNameSubmit}>
                             <label htmlFor="shop-name" className="sc-label">Shop name</label>
                             <input
                                 id="shop-name"
@@ -156,12 +189,32 @@ const Dashboard = () => {
                                             ? `Link preview: ${window.location.origin}/shop/${shopSlugPreview}`
                                             : 'Your shop link will appear here.'}
                                 </p>
-                                <button className="sc-btn" type="submit" disabled={!shopSlugPreview}>
-                                    Preview shop link
+                                <button className="sc-btn" type="submit" disabled={!shopSlugPreview || isSavingShopName}>
+                                    {isSavingShopName ? 'Saving…' : 'Save shop name'}
                                 </button>
                             </div>
-                            <p className="sc-shop-setup-note">This previews the link format. Saving the name and checking that it is available will be connected next.</p>
+                            {shopNameError && <p role="alert" className="sc-shop-setup-note">{shopNameError}</p>}
+                            <p className="sc-shop-setup-note">Your shop link is created when the name is saved.</p>
                         </form>
+                    </section>
+                )}
+
+                {currentUser?.shopName && (
+                    <section className="sc-shop-setup" aria-labelledby="shop-link-title">
+                        <div className="sc-shop-setup-copy">
+                            <p className="sc-eyebrow">Your public storefront</p>
+                            <h2 id="shop-link-title">Your shop link is ready</h2>
+                            <p>Share this link with customers so they can browse your products.</p>
+                        </div>
+                        <div className="sc-shop-setup-form">
+                            <a className="sc-shop-link-preview" href={shopLink} target="_blank" rel="noreferrer">
+                                {shopLink}
+                            </a>
+                            <button className="sc-btn" type="button" onClick={handleCopyShopLink}>
+                                {shopLinkCopied ? 'Copied!' : 'Copy shop link'}
+                            </button>
+                            {shopNameError && <p role="alert" className="sc-shop-setup-note">{shopNameError}</p>}
+                        </div>
                     </section>
                 )}
 

@@ -98,7 +98,7 @@ const Verifytoken = async (req, res) => {
         const verifiedToken = await jwt.verify(token, process.env.JWT_SECERETKEY)
         if (verifiedToken) {
             const currentUser = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture shopName")
-             console.log(currentUser);
+            console.log(currentUser);
             return res.status(200).json({ message: "token verified", currentUser, status: true })
         }
     } catch (error) {
@@ -136,7 +136,7 @@ const Login = async (req, res) => {
         if (!existingUser.isVerified) {
             return res.status(400).json({ message: "email is not verified, check your mail.", status: false });
         }
-        const token = await jwt.sign({ email }, process.env.JWT_SECERETKEY, { expiresIn: "2hr" })
+        const token = await jwt.sign({ email }, process.env.JWT_SECERETKEY, { expiresIn: "7d" })
         return res.status(200).json({ message: "login successful", token, status: true });
 
     } catch (error) {
@@ -152,7 +152,7 @@ const ProfileUpload = async (req, res) => {
     try {
         const { image } = req.body
         const email = req.user
-        console.log(req.user);
+
 
         if (!image) {
             return res.status(500).json({ message: "image is empty", status: false })
@@ -191,9 +191,72 @@ const ProfileUpload = async (req, res) => {
     }
 }
 
+const UpdateShopName = async (req, res) => {
+    try {
+        const email = req.user;
+        const { storeName } = req.body ?? {};
+
+       
+
+        if (typeof storeName !== "string" || !storeName.trim()) {
+            return res.status(400).json({
+                message: "Store name cannot be empty.",
+                status: false,
+            });
+        }
+
+        const cleanStoreName = storeName.trim();
+        const baseSlug = cleanStoreName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+
+        if (!baseSlug) {
+            return res.status(400).json({
+                message: "Use a shop name with letters or numbers.",
+                status: false,
+            });
+        }
+
+        let shopName = baseSlug;
+        let suffix = 2;
+
+        while (await usermodel.exists({
+            shopName,
+            email: { $ne: email },
+        })) {
+            shopName = `${baseSlug}-${suffix}`;
+            suffix += 1;
+        }
+
+        const updatedUser = await usermodel.findOneAndUpdate(
+            { email },
+            { $set: { storeName: cleanStoreName, shopName } },
+            { new: true, runValidators: true }
+        ).select("username storeName shopName");
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                message: "Seller account not found.",
+                status: false,
+            });
+        }
+
+        return res.status(200).json({
+            message: "Shop name saved.",
+            currentUser: updatedUser,
+            status: true,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message,
+            status: false,
+        });
+    }
+};
 
 
 
 
 
-module.exports = { Signup, Login, verifyOtp, Verifytoken, ProfileUpload }
+module.exports = { Signup, Login, verifyOtp, Verifytoken, ProfileUpload, UpdateShopName }

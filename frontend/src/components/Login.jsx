@@ -44,7 +44,7 @@ const Login = () => {
             const response = await axios.post("http://localhost:8004/user/login", loginuser);
             localStorage.setItem("usertoken", response.data.token)
             toast.success(response.data.message)
-            navigate("/sendmessage")
+            navigate("/Dashboard")
         } catch (error) {
             const message = getErrorMessage(error)
             setServerError(message)
