@@ -6,6 +6,42 @@ const otpmodel = require("../module/otp.module");
 const jwt = require("jsonwebtoken")
 const cloudinary = require("../Utils/Cloudinary")
 
+const toShopSlug = (name) => name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+
+const createUniqueShopSlug = async (storeName, email) => {
+    const baseSlug = toShopSlug(storeName) || "my-store"
+    let shopName = baseSlug
+    let suffix = 2
+
+    while (await usermodel.exists({
+        email: { $ne: email },
+        $or: [{ shopName }, { shopSlugHistory: shopName }],
+    })) {
+        shopName = `${baseSlug}-${suffix}`
+        suffix += 1
+    }
+
+    return shopName
+}
+
+const ensureShopIdentity = async (user) => {
+    if (user.shopName && user.storeName) return user
+
+    const storeName = user.storeName || `${user.username}'s Store`
+    const shopName = user.shopName || await createUniqueShopSlug(storeName, user.email)
+
+    return usermodel.findByIdAndUpdate(
+        user._id,
+        { $set: { storeName, shopName } },
+        { new: true, runValidators: true }
+    ).select("username email _id profilepicture storeName shopName")
+}
+
 
 const Signup = async (req, res) => {
 
@@ -24,9 +60,13 @@ const Signup = async (req, res) => {
         console.log(hashedPassword);
 
 
+        const storeName = `${username.trim()}'s Store`
         const newUser = await usermodel.create({
-            ...req.body,
+            username,
+            email,
             password: hashedPassword,
+            storeName,
+            shopName: await createUniqueShopSlug(storeName, email),
             isVerified: false,
         })
         if (newUser) {
@@ -97,7 +137,8 @@ const Verifytoken = async (req, res) => {
         }
         const verifiedToken = await jwt.verify(token, process.env.JWT_SECERETKEY)
         if (verifiedToken) {
-            const currentUser = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture shopName")
+            const user = await usermodel.findOne({ email: verifiedToken.email }).select("username email _id profilepicture storeName shopName")
+            const currentUser = user ? await ensureShopIdentity(user) : null
             console.log(currentUser);
             return res.status(200).json({ message: "token verified", currentUser, status: true })
         }
@@ -206,10 +247,7 @@ const UpdateShopName = async (req, res) => {
         }
 
         const cleanStoreName = storeName.trim();
-        const baseSlug = cleanStoreName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "");
+        const baseSlug = toShopSlug(cleanStoreName)
 
         if (!baseSlug) {
             return res.status(400).json({
@@ -218,20 +256,23 @@ const UpdateShopName = async (req, res) => {
             });
         }
 
-        let shopName = baseSlug;
-        let suffix = 2;
+        const existingUser = await usermodel.findOne({ email }).select("shopName")
+        if (!existingUser) {
+            return res.status(404).json({
+                message: "Seller account not found.",
+                status: false,
+            })
+        }
 
-        while (await usermodel.exists({
-            shopName,
-            email: { $ne: email },
-        })) {
-            shopName = `${baseSlug}-${suffix}`;
-            suffix += 1;
+        const shopName = await createUniqueShopSlug(cleanStoreName, email)
+        const update = { $set: { storeName: cleanStoreName, shopName } }
+        if (existingUser.shopName && existingUser.shopName !== shopName) {
+            update.$addToSet = { shopSlugHistory: existingUser.shopName }
         }
 
         const updatedUser = await usermodel.findOneAndUpdate(
             { email },
-            { $set: { storeName: cleanStoreName, shopName } },
+            update,
             { new: true, runValidators: true }
         ).select("username storeName shopName");
 

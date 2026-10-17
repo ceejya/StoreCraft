@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -7,6 +6,7 @@ import axios from "axios";
 const AddProduct = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [productinfo, setProductinfo] = useState({
     productname: "",
     productprice: "",
@@ -14,6 +14,23 @@ const AddProduct = () => {
     productimage: "",
     productdescription: "",
   });
+
+  useEffect(() => {
+    const token = localStorage.getItem("usertoken");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    axios.get("http://localhost:8004/user/verifytoken", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .catch(() => {
+        localStorage.removeItem("usertoken");
+        navigate("/login", { replace: true });
+      })
+      .finally(() => setIsCheckingSession(false));
+  }, [navigate]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -41,7 +58,10 @@ const AddProduct = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post("http://localhost:8004/product/addproducts", productinfo);
+      const token = localStorage.getItem("usertoken")
+      const response = await axios.post("http://localhost:8004/product/addproducts", productinfo, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       console.log(response);
       toast.success(response.data.message);
 
@@ -60,6 +80,14 @@ const AddProduct = () => {
       setIsLoading(false);
     }
   };
+
+  if (isCheckingSession) {
+    return (
+      <main className="sc-form-page">
+        <p role="status">Checking seller session…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="sc-form-page">

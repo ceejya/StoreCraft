@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify"
 import VerifyOtp from "./components/verifyotp"
 import Dashboard from "./components/Dashboard"
 import AddProduct from "./components/AddProduct"
+import Storefront from "./components/Storefront"
 import socketCilent from "socket.io-client"
 import Sendproduct from "./components/Sendproduct"
 
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/Dashboard" element={<Dashboard socket={socketclient.current} />} />
         <Route path="/add-product" element={<AddProduct socket={socketclient.current} />} />
+        <Route path="/shop/:shopSlug" element={<Storefront />} />
         <Route path="/sendmessage" element={<Sendproduct socket={socketclient.current} />} />
 
       </Routes>

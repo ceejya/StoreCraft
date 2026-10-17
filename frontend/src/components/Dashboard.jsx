@@ -9,7 +9,6 @@ const Dashboard = () => {
     const [products, setProducts] = useState([])
     const [isLoadingProducts, setIsLoadingProducts] = useState(true)
     const [shopNameDraft, setShopNameDraft] = useState('')
-    const [shopNamePreview, setShopNamePreview] = useState('')
     const [isSavingShopName, setIsSavingShopName] = useState(false)
     const [shopNameError, setShopNameError] = useState('')
     const [shopLinkCopied, setShopLinkCopied] = useState(false)
@@ -34,7 +33,7 @@ const Dashboard = () => {
                 { headers: { Authorization: `Bearer ${token}` } }
             )
             setCurrentUser(response.data.currentUser)
-            setShopNamePreview(response.data.currentUser.shopName)
+            setShopNameDraft(response.data.currentUser.storeName)
         } catch (error) {
             setShopNameError(error.response?.data?.message || 'Could not save your shop name. Please try again.')
         } finally {
@@ -61,20 +60,27 @@ const Dashboard = () => {
         axios.get("http://localhost:8004/user/verifytoken", {
             headers: { "Authorization": `Bearer ${token}` }
         })
-            .then((res) => { if (res) setCurrentUser(res.data.currentUser) })
+            .then((res) => {
+                if (res.data?.currentUser) {
+                    setCurrentUser(res.data.currentUser)
+                    setShopNameDraft(res.data.currentUser.storeName || '')
+                }
+            })
             .catch((err) => {
                 console.log(err)
                 localStorage.removeItem("usertoken")
                 navigate("/login")
             })
 
-        axios.get("http://localhost:8004/product/fetch/product")
+        axios.get("http://localhost:8004/product/mine", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
             .then((res) => {
-                if (res.data && res.data.allproducts) setProducts(res.data.allproducts)
+                if (res.data?.status) setProducts(res.data.products)
             })
             .catch((err) => console.log("Error fetching products:", err))
             .finally(() => setIsLoadingProducts(false))
-    }, [])
+    }, [navigate, token])
 
     const initials = currentUser?.username
         ? currentUser.username.slice(0, 2).toUpperCase()
@@ -159,62 +165,44 @@ const Dashboard = () => {
                     </button>
                 </div>
 
-                {currentUser && !currentUser.shopName && (
+                {currentUser && (
                     <section className="sc-shop-setup" aria-labelledby="shop-setup-title">
                         <div className="sc-shop-setup-copy">
                             <p className="sc-eyebrow">Your public storefront</p>
-                            <h2 id="shop-setup-title">Give your shop a name</h2>
-                            <p>Choose the name customers will see in your shop link. You can use your business name, like “Amara Shoes.”</p>
+                            <h2 id="shop-setup-title">Make this shop yours</h2>
+                            <p>Customers can browse your public storefront without signing in. Rename it whenever you like—previously shared links will keep working.</p>
                         </div>
                         <form className="sc-shop-setup-form" onSubmit={handleShopNameSubmit}>
-                            <label htmlFor="shop-name" className="sc-label">Shop name</label>
+                            <label htmlFor="shop-name" className="sc-label">Store name</label>
                             <input
                                 id="shop-name"
                                 className="sc-input"
                                 type="text"
                                 value={shopNameDraft}
-                                onChange={(event) => {
-                                    setShopNameDraft(event.target.value)
-                                    setShopNamePreview('')
-                                }}
+                                onChange={(event) => setShopNameDraft(event.target.value)}
                                 placeholder="e.g. Amara Shoes"
                                 autoComplete="organization"
                                 required
                             />
+                            <p className="sc-shop-link-preview">
+                                {shopLink ? `Current link: ${shopLink}` : 'Your public link is being prepared.'}
+                            </p>
                             <div className="sc-shop-setup-footer">
-                                <p className="sc-shop-link-preview" aria-live="polite">
-                                    {shopNamePreview
-                                        ? `Your link will look like ${window.location.origin}/shop/${shopNamePreview}`
-                                        : shopSlugPreview
-                                            ? `Link preview: ${window.location.origin}/shop/${shopSlugPreview}`
-                                            : 'Your shop link will appear here.'}
-                                </p>
                                 <button className="sc-btn" type="submit" disabled={!shopSlugPreview || isSavingShopName}>
                                     {isSavingShopName ? 'Saving…' : 'Save shop name'}
                                 </button>
+                                <button
+                                    className="sc-btn-ghost"
+                                    type="button"
+                                    onClick={handleCopyShopLink}
+                                    disabled={!shopLink}
+                                >
+                                    {shopLinkCopied ? 'Copied!' : 'Copy shop link'}
+                                </button>
                             </div>
                             {shopNameError && <p role="alert" className="sc-shop-setup-note">{shopNameError}</p>}
-                            <p className="sc-shop-setup-note">Your shop link is created when the name is saved.</p>
+                            <p className="sc-shop-setup-note">Old links automatically lead customers to your current storefront.</p>
                         </form>
-                    </section>
-                )}
-
-                {currentUser?.shopName && (
-                    <section className="sc-shop-setup" aria-labelledby="shop-link-title">
-                        <div className="sc-shop-setup-copy">
-                            <p className="sc-eyebrow">Your public storefront</p>
-                            <h2 id="shop-link-title">Your shop link is ready</h2>
-                            <p>Share this link with customers so they can browse your products.</p>
-                        </div>
-                        <div className="sc-shop-setup-form">
-                            <a className="sc-shop-link-preview" href={shopLink} target="_blank" rel="noreferrer">
-                                {shopLink}
-                            </a>
-                            <button className="sc-btn" type="button" onClick={handleCopyShopLink}>
-                                {shopLinkCopied ? 'Copied!' : 'Copy shop link'}
-                            </button>
-                            {shopNameError && <p role="alert" className="sc-shop-setup-note">{shopNameError}</p>}
-                        </div>
                     </section>
                 )}
 

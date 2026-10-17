@@ -29,7 +29,6 @@ const Sendproduct = ({ socket }) => {
     }, [message])
 
     useEffect(() => {
-
         socket.on("refreshmessage", (refreshedmessage) => {
             setmessage(refreshedmessage)
 

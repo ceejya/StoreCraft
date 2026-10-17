@@ -58,7 +58,51 @@ const getallproduct = async (req, res) => {
         return res.status(500).json({ message: error.message, status: false })
     }
 }
+
+const getSellerProducts = async (req, res) => {
+    try {
+        const seller = await usermodel.findOne({ email: req.user }).select("_id")
+        if (!seller) {
+            return res.status(404).json({ message: "Seller account not found.", status: false })
+        }
+
+        const products = await productmodel.find({ seller: seller._id }).sort({ _id: -1 })
+        return res.status(200).json({ products, status: true })
+    } catch (error) {
+        return res.status(500).json({ message: error.message, status: false })
+    }
+}
+
+const getPublicStore = async (req, res) => {
+    try {
+        const { shopSlug } = req.params
+        const seller = await usermodel.findOne({
+            $or: [{ shopName: shopSlug }, { shopSlugHistory: shopSlug }],
+        }).select("username storeName shopName profilepicture")
+
+        if (!seller) {
+            return res.status(404).json({ message: "This shop could not be found.", status: false })
+        }
+
+        const products = await productmodel.find({ seller: seller._id })
+            .select("productname productprice productdescription productimage stock")
+            .sort({ _id: -1 })
+
+        return res.status(200).json({
+            shop: {
+                username: seller.username,
+                storeName: seller.storeName || `${seller.username}'s Store`,
+                shopName: seller.shopName,
+                profilepicture: seller.profilepicture?.imageurl || null,
+            },
+            products,
+            status: true,
+        })
+    } catch (error) {
+        return res.status(500).json({ message: error.message, status: false })
+    }
+}
   
 
 
-module.exports = { addProduct, getallproduct }
+module.exports = { addProduct, getallproduct, getSellerProducts, getPublicStore }
