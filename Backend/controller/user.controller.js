@@ -208,7 +208,6 @@ const ProfileUpload = async (req, res) => {
             await cloudinary.uploader.destroy(imageid)
         }
 
-
         const uploadedimage = await cloudinary.uploader.upload(image)
         console.log(uploadedimage);
         const profileUpdate = usermodel.findByIdAndUpdate(

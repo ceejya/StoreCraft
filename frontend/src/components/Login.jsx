@@ -68,7 +68,7 @@ const Login = () => {
         <AuthLayout
             switchPrompt="New here?"
             switchLabel="Create an account"
-            switchTo="/"
+            switchTo="/signup"
             caption={{
                 headline: "Pick up where you left off.",
                 sub: "Your listings and conversations are right where you left them."

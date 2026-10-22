@@ -9,6 +9,7 @@ import AddProduct from "./components/AddProduct"
 import Storefront from "./components/Storefront"
 import socketCilent from "socket.io-client"
 import Sendproduct from "./components/Sendproduct"
+import Landing from "./components/Landing"
 
 
 const App = () => {
@@ -21,7 +22,8 @@ const App = () => {
     <div>
       <ToastContainer/>
       <Routes>
-        <Route path='/' element={<SignupForm />} />
+        <Route path='/' element={<Landing />} />
+        <Route path='/signup' element={<SignupForm />} />
         <Route path="/login" element={<Login />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/Dashboard" element={<Dashboard socket={socketclient.current} />} />
