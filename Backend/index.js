@@ -8,12 +8,28 @@ const socket = require("socket.io")
 const cors = require("cors")
 const chatmodel = require("./module/chat.model")
 
-app.use(cors({ origin: "*" }))
+// Comma-separated list, e.g. "https://storecraft.vercel.app,http://localhost:5173"
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")
+    .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean)
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow non-browser requests (curl, Render health checks) with no Origin header
+        if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+        return callback(new Error(`Origin ${origin} not allowed by CORS`))
+    },
+    credentials: true,
+}
+
+app.use(cors(corsOptions))
 app.use(express.json({ limit: "50mb" }))
+app.get("/health", (req, res) => res.status(200).json({ status: "ok" }))
 app.use("/user", userrouter)
 app.use("/product", productrouter)
 
-const port = 8004
+const port = process.env.PORT || 8004
 
 const startServer = async () => {
     try {
@@ -25,7 +41,7 @@ const startServer = async () => {
         })
 
         const io = socket(connection, {
-            cors: { origin: "*" }
+            cors: { origin: allowedOrigins, credentials: true }
         })
 
         io.on("connection", async (clientSocket) => {
