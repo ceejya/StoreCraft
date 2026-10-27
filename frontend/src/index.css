@@ -130,6 +130,10 @@ textarea:focus-visible {
   --a-radius-lg: 22px;
   --a-ease:      cubic-bezier(0.22, 1, 0.36, 1);
   --a-fast:      160ms;
+  --a-code-size: 1.25rem;
+  --a-code-spacing: 0.3em;
+  --a-note-size: 0.875rem;
+  --a-note-space: 20px;
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
@@ -301,6 +305,20 @@ textarea:focus-visible {
   -webkit-text-fill-color: var(--a-ink);
   box-shadow: 0 0 0 1000px #ffffff inset;
   caret-color: var(--a-accent);
+}
+
+.auth-otp-field .auth-input {
+  font-family: var(--a-font-mono);
+  font-size: var(--a-code-size);
+  letter-spacing: var(--a-code-spacing);
+  text-align: center;
+}
+
+.auth-otp-note {
+  margin: var(--a-note-space) 0 0;
+  color: var(--a-ink-2);
+  font-size: var(--a-note-size);
+  line-height: 1.5;
 }
 
 .auth-field.has-error .auth-input {

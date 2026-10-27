@@ -46,7 +46,6 @@ const ensureShopIdentity = async (user) => {
 const Signup = async (req, res) => {
 
     try {
-        console.log(req.body);
         const { username, password, email } = req.body
 
         if (!username || !password || !email) {
@@ -57,7 +56,6 @@ const Signup = async (req, res) => {
         }
 
         const hashedPassword = await bcryptjs.hash(password, 10)
-        console.log(hashedPassword);
 
 
         const storeName = `${username.trim()}'s Store`
@@ -85,11 +83,14 @@ const Signup = async (req, res) => {
         }
 
     } catch (error) {
-        console.log(error);
-        if (error.message.includes('E11000 duplicate key error collection')) {
-            return res.status(400).json({ message: 'user already exist', status: false })
-
+        if (error.code === 11000) {
+            const duplicateFields = Object.keys(error.keyPattern || {})
+            const message = duplicateFields.length
+                ? `A record with this ${duplicateFields.join(" and ")} already exists`
+                : "A record with a duplicate unique value already exists"
+            return res.status(400).json({ message, status: false })
         }
+        console.error("Signup failed:", error.message)
         return res.status(500).json({ message: error.message, status: false })
 
 
@@ -101,7 +102,7 @@ const Signup = async (req, res) => {
 const verifyOtp = async (req, res) => {
     try {
         const { otp, email } = req.body
-        if (!otp) {
+        if (!otp) {ths
             return res.status(400).json({ message: "All fields are mandatory", status: false })
         }
         const existotp = await otpmodel.findOne({ otp })
