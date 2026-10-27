@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import { react, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from "axios"
@@ -39,7 +40,7 @@ const Sendproduct = ({ socket }) => {
 
 
     useEffect(() => {
-        axios.get("http://localhost:8004/user/verifytoken", {
+        axios.get(API_URL + "/user/verifytoken", {
             headers: {
                 "Authorization": `Bearer ${token}`
             }

@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from "react-router-dom"
 import { toast } from "react-toastify"
@@ -13,7 +14,7 @@ const VerifyOtp = () => {
     const handleVerify = async () => {
         setIsLoading(true)
         try {
-            const response = await axios.post("http://localhost:8004/user/verifyotp", { email, otp });
+            const response = await axios.post(API_URL + "/user/verifyotp", { email, otp });
             toast.success(response.data.message)
             navigate("/login")
         } catch (error) {

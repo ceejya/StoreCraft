@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
@@ -28,7 +29,7 @@ const Dashboard = () => {
         setShopNameError('')
         try {
             const response = await axios.patch(
-                "http://localhost:8004/user/shop-name",
+                API_URL + "/user/shop-name",
                 { storeName: shopNameDraft },
                 { headers: { Authorization: `Bearer ${token}` } }
             )
@@ -57,7 +58,7 @@ const Dashboard = () => {
 
 
     useEffect(() => {
-        axios.get("http://localhost:8004/user/verifytoken", {
+        axios.get(API_URL + "/user/verifytoken", {
             headers: { "Authorization": `Bearer ${token}` }
         })
             .then((res) => {
@@ -72,7 +73,7 @@ const Dashboard = () => {
                 navigate("/login")
             })
 
-        axios.get("http://localhost:8004/product/mine", {
+        axios.get(API_URL + "/product/mine", {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then((res) => {

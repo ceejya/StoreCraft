@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +23,7 @@ const AddProduct = () => {
       return;
     }
 
-    axios.get("http://localhost:8004/user/verifytoken", {
+    axios.get(API_URL + "/user/verifytoken", {
       headers: { Authorization: `Bearer ${token}` }
     })
       .catch(() => {
@@ -59,7 +60,7 @@ const AddProduct = () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("usertoken")
-      const response = await axios.post("http://localhost:8004/product/addproducts", productinfo, {
+      const response = await axios.post(API_URL + "/product/addproducts", productinfo, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log(response);

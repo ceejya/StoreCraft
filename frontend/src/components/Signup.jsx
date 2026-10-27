@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-toastify"
@@ -46,7 +47,7 @@ const SignupForm = () => {
 
         setIsLoading(true)
         try {
-            const response = await axios.post("http://localhost:8004/user/Signup", userdetail);
+            const response = await axios.post(API_URL + "/user/Signup", userdetail);
             toast.success(response.data.message)
             const email = userdetail.email.trim()
             sessionStorage.setItem("pendingVerificationEmail", email)

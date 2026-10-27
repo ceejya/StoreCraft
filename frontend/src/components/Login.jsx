@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import React, { useState } from 'react';
 import { toast } from "react-toastify"
 import { useNavigate, Link } from 'react-router-dom';
@@ -41,7 +42,7 @@ const Login = () => {
 
         setIsLoading(true)
         try {
-            const response = await axios.post("http://localhost:8004/user/login", loginuser);
+            const response = await axios.post(API_URL + "/user/login", loginuser);
             localStorage.setItem("usertoken", response.data.token)
             toast.success(response.data.message)
             navigate("/Dashboard")

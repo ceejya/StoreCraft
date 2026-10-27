@@ -1,3 +1,4 @@
+import { API_URL } from "../config"
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
@@ -22,7 +23,7 @@ const Storefront = () => {
     useEffect(() => {
         let isCurrentRequest = true
 
-        axios.get(`http://localhost:8004/product/store/${encodeURIComponent(shopSlug)}`)
+        axios.get(`${API_URL}/product/store/${encodeURIComponent(shopSlug)}`)
             .then(({ data }) => {
                 if (!isCurrentRequest) return
                 setLoadError('')

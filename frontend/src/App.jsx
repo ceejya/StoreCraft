@@ -1,3 +1,4 @@
+import { API_URL } from "./config"
 import React, { useRef } from "react"
 import { Routes, Route } from "react-router-dom"
 import SignupForm from "./components/Signup"
@@ -13,7 +14,7 @@ import Landing from "./components/Landing"
 
 
 const App = () => {
-  const BaseUrl = "http://localhost:8004"
+  const BaseUrl = API_URL
   const socketclient = useRef(socketCilent(BaseUrl))
 
 
