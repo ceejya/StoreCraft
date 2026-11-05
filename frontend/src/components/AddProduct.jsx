@@ -129,7 +129,7 @@ const AddProduct = () => {
               <div className="sc-field">
                 <label htmlFor="productprice" className="sc-label">Price</label>
                 <div className="sc-input-prefix-wrap">
-                  <span className="sc-input-prefix">$</span>
+                  <span className="sc-input-prefix">₦</span>
                   <input
                     id="productprice"
                     className="sc-input sc-input--prefixed"

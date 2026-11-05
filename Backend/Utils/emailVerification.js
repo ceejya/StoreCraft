@@ -1,6 +1,14 @@
 const nodemailer = require("nodemailer")
 
 const sendemailVerification = async  (email, username, otp) => {
+    const emailUser = process.env.EMAIL_USER?.trim()
+    const emailPass = process.env.EMAIL_PASS?.trim()
+    if (!emailUser || !emailPass) {
+        const error = new Error("EMAIL_USER and EMAIL_PASS must be configured before sending verification email.")
+        error.code = "EMAIL_CONFIG_MISSING"
+        throw error
+    }
+
     const messageTemplate = `<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -88,14 +96,14 @@ const sendemailVerification = async  (email, username, otp) => {
     const transporter = nodemailer.createTransport({
         service: "gmail",
         auth:{
-            user:process.env.EMAIL_USER,
-            pass:process.env.EMAIL_PASS
+            user: emailUser,
+            pass: emailPass
 
         }
     })
 
     const mailOptions = {
-        from:process.env.EMAIL_USER,
+        from: emailUser,
         to:email,
         subject:"Email Verification",
         html:messageTemplate
@@ -104,15 +112,7 @@ const sendemailVerification = async  (email, username, otp) => {
 
 
 
-    try { const mailresponse = await transporter.sendMail(mailOptions)
-        if (mailresponse) {
-            return "mail sent"
-            
-        }
-        } catch (error) {
-            throw new Error(error.message)
-        
-    } 
+    return transporter.sendMail(mailOptions)
     }
 
         

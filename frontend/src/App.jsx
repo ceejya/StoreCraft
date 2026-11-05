@@ -11,6 +11,8 @@ import Storefront from "./components/Storefront"
 import socketCilent from "socket.io-client"
 import Sendproduct from "./components/Sendproduct"
 import Landing from "./components/Landing"
+import StoreCheckout from "./components/StoreCheckout"
+import PaymentReturn from "./components/PaymentReturn"
 
 
 const App = () => {
@@ -30,6 +32,8 @@ const App = () => {
         <Route path="/Dashboard" element={<Dashboard socket={socketclient.current} />} />
         <Route path="/add-product" element={<AddProduct socket={socketclient.current} />} />
         <Route path="/shop/:shopSlug" element={<Storefront />} />
+        <Route path="/shop/:shopSlug/checkout" element={<StoreCheckout />} />
+        <Route path="/payment-return" element={<PaymentReturn />} />
         <Route path="/sendmessage" element={<Sendproduct socket={socketclient.current} />} />
 
       </Routes>

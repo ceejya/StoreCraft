@@ -9,7 +9,7 @@ const DEMO_PRODUCTS = [
     { id: "mug", name: "Speckled stoneware mug", price: 24, stock: 12, img: "/landing/mug.jpg" },
 ]
 
-const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+const money = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })
 
 const ProductImage = ({ src, alt }) => {
     const [failed, setFailed] = useState(false)

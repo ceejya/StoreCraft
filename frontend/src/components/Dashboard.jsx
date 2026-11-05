@@ -211,7 +211,7 @@ const Dashboard = () => {
                 <div className="row g-3 mb-4">
                     {[
                         { label: 'Products', value: products.length, accent: 'cobalt', icon: <><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></> },
-                        { label: 'Inventory Value', value: `$${totalValue.toLocaleString()}`, accent: 'amber', icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/> },
+                        { label: 'Inventory Value', value: `₦${totalValue.toLocaleString('en-NG')}`, accent: 'amber', icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/> },
                         { label: 'Stock Units', value: totalStock.toLocaleString(), accent: 'leather', icon: <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/> },
                         { label: 'Orders', value: '—', accent: 'rose', icon: <><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></> },
                     ].map((s, i) => (
@@ -276,7 +276,7 @@ const Dashboard = () => {
                                             <h3 className="sc-card-name">{product.productname}</h3>
                                             <p className="sc-card-desc">{product.productdescription}</p>
                                             <div className="sc-card-foot">
-                                                <span className="sc-card-price">${Number(product.productprice).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                            <span className="sc-card-price">₦{Number(product.productprice).toLocaleString('en-NG', { minimumFractionDigits: 2 })}</span>
                                                 <button className="sc-card-menu" aria-label={`Options for ${product.productname}`}>
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                                                 </button>

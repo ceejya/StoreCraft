@@ -41,47 +41,84 @@ const ensureShopIdentity = async (user) => {
         { new: true, runValidators: true }
     ).select("username email _id profilepicture storeName shopName")
 }
-
+ 
 
 const Signup = async (req, res) => {
-
     try {
-        const { username, password, email } = req.body
+        const { username, password } = req.body
+        const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
+        const normalizedUsername = typeof username === "string" ? username.trim() : ""
 
-        if (!username || !password || !email) {
-
-
+        if (!normalizedUsername || typeof password !== "string" || password.length < 6 || !email) {
             return res.status(400).json({ message: "All fields are mandatory", status: false })
-
         }
 
-        const hashedPassword = await bcryptjs.hash(password, 10)
+        const existingUser = await usermodel.findOne({ email })
 
-
-        const storeName = `${username.trim()}'s Store`
-        const newUser = await usermodel.create({
-            username,
-            email,
-            password: hashedPassword,
-            storeName,
-            shopName: await createUniqueShopSlug(storeName, email),
-            isVerified: false,
-        })
-        if (newUser) {
-            const verificationotp = generateOtp()
-            await otpmodel.create({
-                otp: verificationotp,
-                email
+        if (existingUser?.isVerified) {
+            return res.status(409).json({
+                message: "An account with this email already exists. Please log in.",
+                status: false,
             })
-
-
-            const sentmail = await sendemailVerification(email, username, verificationotp)
-            console.log(sentmail);
-
-            return res.status(200).json({ message: "Sign up successful", status: true })
-
         }
 
+        const passwordHash = await bcryptjs.hash(password, 10)
+        const storeName = `${normalizedUsername}'s Store`
+        const shopName = existingUser?.shopName || await createUniqueShopSlug(storeName, email)
+
+        if (existingUser) {
+            existingUser.username = normalizedUsername
+            existingUser.password = passwordHash
+            existingUser.storeName = storeName
+            existingUser.shopName = shopName
+            existingUser.isVerified = false 
+            await existingUser.save()
+        } else {
+            await usermodel.create({
+                username: normalizedUsername,
+                email,
+                password: passwordHash,
+                storeName,
+                shopName,
+                isVerified: false,
+            })
+        }
+
+        const verificationotp = generateOtp()
+        await otpmodel.findOneAndUpdate(
+            { email },
+            {
+                $set: {
+                    otp: verificationotp,
+                    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+                },
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        )
+
+        try {
+            await sendemailVerification(email, normalizedUsername, verificationotp)
+        } catch (error) {
+            console.error("Could not send signup verification email:", {
+                code: error.code,
+                responseCode: error.responseCode,
+                command: error.command,
+                message: error.message,
+            })
+            return res.status(503).json({
+                message: error.code === "EMAIL_CONFIG_MISSING"
+                    ? "Your account is saved but email verification is not configured on the server. Please contact support."
+                    : "Your account is saved but we couldn't send the verification code. Submit signup again with the same email to request a new code.",
+                status: false,
+            })
+        }
+
+        return res.status(200).json({
+            message: existingUser
+                ? "A new verification code was sent to your email"
+                : "Verification code sent. Confirm your email to finish creating your account.",
+            status: true,
+        })
     } catch (error) {
         if (error.code === 11000) {
             const duplicateFields = Object.keys(error.keyPattern || {})
@@ -101,28 +138,34 @@ const Signup = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
     try {
-        const { otp, email } = req.body
-        if (!otp) {ths
-            return res.status(400).json({ message: "All fields are mandatory", status: false })
+        const otp = typeof req.body.otp === "string" ? req.body.otp.trim().toUpperCase() : ""
+        const email = typeof req.body.email === "string" ? req.body.email.trim().toLowerCase() : ""
+        if (!otp || !email) {
+            return res.status(400).json({ message: "Email and verification code are required.", status: false })
         }
-        const existotp = await otpmodel.findOne({ otp })
-        console.log(existotp);
-
-
-        if (existotp) {
-            const verifieduser = await usermodel.findOneAndUpdate(
-                { email: existotp.email },
-                { isVerified: true },
-                { new: true }
-            )
-            if (verifieduser) {
-                await otpmodel.findByIdAndDelete(existotp._id)
-                return res.status(200).json({ message: "email verified", status: true })
-            }
-
+        const pendingSignup = await otpmodel.findOne({ email, otp })
+        if (!pendingSignup || !pendingSignup.expiresAt || pendingSignup.expiresAt <= new Date()) {
+            return res.status(400).json({ message: "That verification code is invalid or expired. Request a new code and try again.", status: false })
         }
+
+        const user = await usermodel.findOne({ email })
+        if (!user) {
+            return res.status(404).json({ message: "Signup details were not found. Please sign up again.", status: false })
+        }
+        if (user.isVerified) {
+            await otpmodel.deleteOne({ _id: pendingSignup._id })
+            return res.status(200).json({ message: "Email is already verified. Please log in.", status: true })
+        }
+
+        user.isVerified = true
+        await user.save()
+        await otpmodel.deleteOne({ _id: pendingSignup._id })
+        return res.status(200).json({ message: "Email verified. You can now log in.", status: true })
 
     } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({ message: "That email or shop name is already in use. Please try signing up again.", status: false })
+        }
         return res.status(500).json({ message: error.message, status: false })
 
     }

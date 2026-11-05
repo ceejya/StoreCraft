@@ -4,6 +4,8 @@ require("dotenv").config()
 const connect = require("./database/db.connect")
 const userrouter = require("./route/user.route")
 const productrouter = require("./route/product.route")
+const paymentrouter = require("./route/payment.route")
+const paymentWebhookRouter = require("./route/payment-webhook.route")
 const socket = require("socket.io")
 const cors = require("cors")
 const chatmodel = require("./module/chat.model")
@@ -24,10 +26,13 @@ const corsOptions = {
 }
 
 app.use(cors(corsOptions))
+// Webhooks need the original bytes to validate provider signatures.
+app.use("/payments/webhooks", paymentWebhookRouter)
 app.use(express.json({ limit: "50mb" }))
 app.get("/health", (req, res) => res.status(200).json({ status: "ok" }))
 app.use("/user", userrouter)
 app.use("/product", productrouter)
+app.use("/payments", paymentrouter)
 
 const port = process.env.PORT || 8004
 

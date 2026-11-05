@@ -22,8 +22,8 @@ const VerifyOtp = () => {
         if (isLoading) return
 
         setServerError("")
-        if (!/^\d{6}$/.test(otp)) {
-            setFieldError("Enter the 6-digit code from your email")
+        if (!/^[A-Z0-9]{4}$/.test(otp)) {
+            setFieldError("Enter the 4-character code from your email")
             return
         }
 
@@ -42,7 +42,7 @@ const VerifyOtp = () => {
     }
 
     const handleOtpChange = (event) => {
-        setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+        setOtp(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4))
         if (fieldError) setFieldError("")
     }
 
@@ -63,7 +63,7 @@ const VerifyOtp = () => {
                 <p className="auth-step">Step 2 of 2</p>
                 <h1 className="auth-title">Verify your email</h1>
                 <p className="auth-lede">
-                    Enter the 6-digit code we sent to{" "}
+                    Enter the 4-character code we sent to{" "}
                     {email ? <strong>{email}</strong> : "your email address"}.
                 </p>
             </div>
@@ -74,15 +74,17 @@ const VerifyOtp = () => {
                 <div className="auth-otp-field">
                     <AuthField
                         id="verify-otp"
-                        label="6-digit verification code"
+                        label="4-character verification code"
                         value={otp}
                         onChange={handleOtpChange}
                         error={fieldError}
-                        inputMode="numeric"
+                        inputMode="text"
                         autoComplete="one-time-code"
-                        pattern="[0-9]{6}"
-                        maxLength={6}
-                        placeholder="000000"
+                        autoCapitalize="characters"
+                        spellCheck={false}
+                        pattern="[A-Z0-9]{4}"
+                        maxLength={4}
+                        placeholder="A1B2"
                         disabled={isLoading}
                     />
                 </div>

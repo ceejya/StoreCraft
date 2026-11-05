@@ -1,12 +1,11 @@
 import { API_URL } from "../config"
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import axios from 'axios'
 
-const formatPrice = (price) => `$${Number(price).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-})}`
+const formatPrice = (price) => new Intl.NumberFormat('en-NG', {
+    style: 'currency', currency: 'NGN', maximumFractionDigits: 2,
+}).format(Number(price) || 0)
 
 const Storefront = () => {
     const { shopSlug } = useParams()
@@ -18,6 +17,8 @@ const Storefront = () => {
     const [loadedSlug, setLoadedSlug] = useState('')
     const [loadError, setLoadError] = useState('')
     const [cartNotice, setCartNotice] = useState('')
+    const [cartReadyForSlug, setCartReadyForSlug] = useState('')
+    const bagRef = useRef(null)
     const isLoading = loadedSlug !== shopSlug
 
     useEffect(() => {
@@ -46,6 +47,31 @@ const Storefront = () => {
             isCurrentRequest = false
         }
     }, [shopSlug, navigate])
+
+    useEffect(() => {
+        if (loadedSlug !== shopSlug || !store || store.shopName !== shopSlug) return
+        try {
+            const savedCart = JSON.parse(localStorage.getItem(`storecraft:cart:${shopSlug}`) || '{}')
+            const available = new Map(products.map((product) => [product._id, Number(product.stock)]))
+            const reconciled = Object.fromEntries(Object.entries(savedCart)
+                .filter(([productId, quantity]) => available.has(productId) && Number(quantity) > 0)
+                .map(([productId, quantity]) => [productId, Math.min(Number(quantity), available.get(productId))])
+                .filter(([, quantity]) => quantity > 0))
+            setCart(reconciled)
+        } catch {
+            setCart({})
+        }
+        setCartReadyForSlug(shopSlug)
+    }, [loadedSlug, shopSlug, products, store])
+
+    useEffect(() => {
+        if (cartReadyForSlug !== shopSlug) return
+        try {
+            localStorage.setItem(`storecraft:cart:${shopSlug}`, JSON.stringify(cart))
+        } catch {
+            setCartNotice("Your bag can’t be saved on this device. Keep this tab open while you shop.")
+        }
+    }, [cart, cartReadyForSlug, shopSlug])
 
     const visibleProducts = useMemo(() => {
         const query = search.trim().toLowerCase()
@@ -78,6 +104,18 @@ const Storefront = () => {
             else nextCart[product._id] = nextQuantity
             return nextCart
         })
+    }
+
+    const buyProduct = (product) => {
+        if (Number(product.stock) <= 0) return
+
+        setCart((currentCart) => ({
+            ...currentCart,
+            [product._id]: Math.min(Number(product.stock), (currentCart[product._id] || 0) + 1),
+        }))
+        setCartNotice(`Added ${product.productname} to your bag.`)
+        bagRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        bagRef.current?.focus({ preventScroll: true })
     }
 
     if (isLoading) {
@@ -193,10 +231,10 @@ const Storefront = () => {
                                                 <button
                                                     className="storefront-add-button"
                                                     type="button"
-                                                    onClick={() => updateQuantity(product, 1)}
+                                                    onClick={() => buyProduct(product)}
                                                     disabled={isOutOfStock}
                                                 >
-                                                    {isOutOfStock ? 'Currently unavailable' : 'Add to bag'}
+                                                    {isOutOfStock ? 'Currently unavailable' : 'Buy'}
                                                     {!isOutOfStock && <span aria-hidden="true">+</span>}
                                                 </button>
                                             </div>
@@ -207,7 +245,7 @@ const Storefront = () => {
                         )}
                     </section>
 
-                    <aside className="storefront-bag" aria-labelledby="bag-title">
+                    <aside className="storefront-bag" aria-labelledby="bag-title" ref={bagRef} tabIndex={-1}>
                         <div className="storefront-bag-heading">
                             <div>
                                 <p className="storefront-kicker">Your selection</p>
@@ -244,16 +282,18 @@ const Storefront = () => {
                                     ))}
                                 </ul>
                                 <div className="storefront-bag-total">
-                                    <span>Subtotal</span>
+                                    <span>Subtotal estimate</span>
                                     <strong>{formatPrice(cartTotal)}</strong>
                                 </div>
                                 <p className="storefront-checkout-note">
-                                    Checkout and payments will be available soon. Your bag is not an order.
+                                    Delivery is confirmed at checkout. Your bag is not yet an order.
                                 </p>
                                 {cartNotice && <p className="storefront-cart-notice" role="status">{cartNotice}</p>}
-                                <button className="storefront-checkout" type="button" disabled>
-                                    Checkout coming soon
-                                </button>
+                                <button
+                                    className="storefront-checkout storefront-checkout--active"
+                                    type="button"
+                                    onClick={() => navigate(`/shop/${encodeURIComponent(shopSlug)}/checkout`)}
+                                >Continue to checkout</button>
                             </>
                         )}
                     </aside>
