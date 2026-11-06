@@ -10,8 +10,8 @@ const socket = require("socket.io")
 const cors = require("cors")
 const chatmodel = require("./module/chat.model")
 
-// Comma-separated list, e.g. "https://storecraft.vercel.app,http://localhost:5173"
-const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+// Comma-separated list, e.g. "https://storecraft.vercel.app,http://localhost:5173,http://127.0.0.1:5173"
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173,http://127.0.0.1:5173")
     .split(",")
     .map((o) => o.trim().replace(/\/$/, ""))
     .filter(Boolean)

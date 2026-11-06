@@ -2,12 +2,30 @@ import { API_URL } from "../config"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import axios from "axios"
+import PaystackPop from "@paystack/inline-js"
 
 const formatPrice = (amount) => new Intl.NumberFormat("en-NG", {
     style: "currency", currency: "NGN", maximumFractionDigits: 2,
 }).format(Number(amount) || 0)
 
 const emptyDetails = { customerName: "", email: "", phone: "", address: "", city: "", state: "" }
+const readPaystackSession = (shopSlug) => {
+    try {
+        const session = JSON.parse(sessionStorage.getItem(`storecraft:payment:${shopSlug}`) || "null")
+        return session?.provider === "paystack" && session.accessCode && session.orderCode && session.access
+            ? { ...session, shopSlug }
+            : null
+    } catch {
+        sessionStorage.removeItem(`storecraft:payment:${shopSlug}`)
+        return null
+    }
+}
+const checkoutErrorMessage = (error, fallback) => error.response?.data?.message
+    || (error.code === "ECONNABORTED"
+        ? "Checkout timed out. Check that the backend is running and responding, then try again."
+        : error.code === "ERR_NETWORK"
+            ? `StoreCraft could not reach ${API_URL}. Check the backend address and its allowed frontend origins.`
+            : fallback)
 
 const SummaryImage = ({ src, alt }) => {
     const [failed, setFailed] = useState(false)
@@ -20,13 +38,18 @@ const StoreCheckout = () => {
     const navigate = useNavigate()
     const [store, setStore] = useState(null)
     const [products, setProducts] = useState([])
+    const [cart, setCart] = useState({})
     const [details, setDetails] = useState(emptyDetails)
     const [provider, setProvider] = useState("paystack")
     const [phase, setPhase] = useState("loading")
     const [error, setError] = useState("")
     const [retry, setRetry] = useState(null)
+    const [paystackSession, setPaystackSession] = useState(null)
     const [submitting, setSubmitting] = useState(false)
     const headingRef = useRef(null)
+    const activePaystackSession = paystackSession?.shopSlug === shopSlug
+        ? paystackSession
+        : readPaystackSession(shopSlug)
 
     useEffect(() => {
         let current = true
@@ -64,11 +87,32 @@ const StoreCheckout = () => {
         if (phase === "ready") headingRef.current?.focus()
     }, [phase])
 
-    const [cart, setCart] = useState({})
     const cartItems = useMemo(() => products
         .filter((product) => Number(cart[product._id]) > 0)
         .map((product) => ({ ...product, quantity: Number(cart[product._id]) })), [cart, products])
     const total = cartItems.reduce((sum, item) => sum + Number(item.productprice) * item.quantity, 0)
+
+    const showPaystackPopup = (session) => {
+        try {
+            const popup = new PaystackPop()
+            popup.resumeTransaction(session.accessCode, {
+                onSuccess: () => {
+                    navigate(`/payment-return?order=${encodeURIComponent(session.orderCode)}&access=${encodeURIComponent(session.access)}`)
+                },
+                onCancel: () => {
+                    setSubmitting(false)
+                    setError("Payment window closed. Your order is saved—you can reopen the Paystack payment below.")
+                },
+                onError: (popupError) => {
+                    setSubmitting(false)
+                    setError(popupError?.message || "Paystack could not open. Please try again.")
+                },
+            })
+        } catch (popupError) {
+            setSubmitting(false)
+            setError(popupError?.message || "Paystack could not open. Please try again.")
+        }
+    }
 
     const submitCheckout = async (event) => {
         event.preventDefault()
@@ -88,18 +132,30 @@ const StoreCheckout = () => {
                 provider,
                 checkoutKey,
                 items: cartItems.map(({ _id, quantity }) => ({ productId: _id, quantity })),
-            })
-            if (data.checkoutUrl) {
+            }, { timeout: 30000 })
+            if (data.provider === "paystack" && data.accessCode) {
+                const session = { provider: "paystack", accessCode: data.accessCode, orderCode: data.orderCode, access: checkoutKey, shopSlug }
+                sessionStorage.setItem(`storecraft:payment:${shopSlug}`, JSON.stringify(session))
+                setPaystackSession(session)
+                setSubmitting(false)
+                showPaystackPopup(session)
+            } else if (data.checkoutUrl) {
                 sessionStorage.removeItem(keyName)
                 window.location.assign(data.checkoutUrl)
             } else if (data.statusUrl) {
                 sessionStorage.removeItem(keyName)
                 window.location.assign(data.statusUrl)
             }
-            else if (data.orderCode && data.accessToken) setRetry({ orderCode: data.orderCode, access: data.accessToken })
+            else if (data.orderCode && data.accessToken) {
+                setRetry({ orderCode: data.orderCode, access: data.accessToken })
+                setSubmitting(false)
+            } else {
+                setError("The backend responded without payment details. Check that the latest payment backend is deployed.")
+                setSubmitting(false)
+            }
         } catch (requestError) {
             const response = requestError.response?.data
-            setError(response?.message || "We couldn't start checkout. Check your connection and try again.")
+            setError(checkoutErrorMessage(requestError, "We couldn't start checkout. Check your connection and try again."))
             if (response?.orderCode && response?.accessToken) {
                 setRetry({ orderCode: response.orderCode, access: response.accessToken })
             }
@@ -115,11 +171,19 @@ const StoreCheckout = () => {
             const { data } = await axios.post(`${API_URL}/payments/orders/${encodeURIComponent(retry.orderCode)}/retry`, {
                 access: retry.access,
                 provider,
-            })
+            }, { timeout: 30000 })
             sessionStorage.removeItem(`storecraft:checkout:${shopSlug}`)
-            window.location.assign(data.checkoutUrl)
+            if (data.provider === "paystack" && data.accessCode) {
+                const session = { provider: "paystack", accessCode: data.accessCode, orderCode: data.orderCode, access: retry.access, shopSlug }
+                sessionStorage.setItem(`storecraft:payment:${shopSlug}`, JSON.stringify(session))
+                setPaystackSession(session)
+                setSubmitting(false)
+                showPaystackPopup(session)
+            } else {
+                window.location.assign(data.checkoutUrl)
+            }
         } catch (requestError) {
-            setError(requestError.response?.data?.message || "We couldn't reopen payment. Please try again.")
+            setError(checkoutErrorMessage(requestError, "We couldn't reopen payment. Please try again."))
             setSubmitting(false)
         }
     }
@@ -183,6 +247,14 @@ const StoreCheckout = () => {
                             </section>
 
                             {error && <p className="checkout-error" role="alert">{error}</p>}
+                            {activePaystackSession && (
+                                <div className="payment-check-note" role="status">
+                                    <p>Your order is saved. If you closed the Paystack window, you can continue the same payment.</p>
+                                    <button className="payment-refresh" type="button" disabled={submitting} onClick={() => showPaystackPopup(activePaystackSession)}>
+                                        Reopen Paystack payment
+                                    </button>
+                                </div>
+                            )}
                             {retry ? (
                                 <button className="storefront-checkout storefront-checkout--active" type="button" onClick={retryPayment} disabled={submitting}>
                                     {submitting ? "Opening payment…" : `Retry with ${provider === "paystack" ? "Paystack" : "Flutterwave"}`}

@@ -41,8 +41,14 @@ const initializePayment = async ({ provider, order, payment, accessToken }) => {
                 metadata: { order_code: order.orderCode },
             }),
         })
-        if (!result.status || !result.data?.authorization_url) throw new Error("Paystack did not return a checkout link.")
-        return { checkoutUrl: result.data.authorization_url, providerTransactionId: null }
+        if (!result.status || !result.data?.authorization_url || !result.data?.access_code) {
+            throw new Error("Paystack did not return the checkout details.")
+        }
+        return {
+            checkoutUrl: result.data.authorization_url,
+            accessCode: result.data.access_code,
+            providerTransactionId: null,
+        }
     }
 
     if (provider === "flutterwave") {

@@ -5,6 +5,7 @@ const paymentSchema = new mongoose.Schema({
     provider: { type: String, enum: ["paystack", "flutterwave"], required: true },
     reference: { type: String, required: true, unique: true, index: true },
     providerTransactionId: { type: String, default: null },
+    accessCode: { type: String, default: null, select: false },
     currency: { type: String, enum: ["NGN"], default: "NGN", required: true },
     expectedAmountKobo: { type: Number, required: true, min: 1 },
     receivedAmountKobo: { type: Number, default: null, min: 0 },

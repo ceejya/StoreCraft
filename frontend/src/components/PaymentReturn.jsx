@@ -2,6 +2,7 @@ import { API_URL } from "../config"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import axios from "axios"
+import PaystackPop from "@paystack/inline-js"
 
 const formatPrice = (amountKobo) => new Intl.NumberFormat("en-NG", {
     style: "currency", currency: "NGN", maximumFractionDigits: 2,
@@ -36,6 +37,8 @@ const PaymentReturn = () => {
             setError("")
             if (["paid", "stock_review", "payment_review"].includes(data.status)) {
                 localStorage.removeItem(`storecraft:cart:${data.shopSlug}`)
+                sessionStorage.removeItem(`storecraft:payment:${data.shopSlug}`)
+                sessionStorage.removeItem(`storecraft:checkout:${data.shopSlug}`)
             }
         } catch (requestError) {
             setError(requestError.response?.data?.message || "We can’t confirm the payment status right now.")
@@ -62,7 +65,24 @@ const PaymentReturn = () => {
         setRetryError("")
         try {
             const { data } = await axios.post(`${API_URL}/payments/orders/${encodeURIComponent(orderCode)}/retry`, { access, provider })
-            window.location.assign(data.checkoutUrl)
+            if (data.provider === "paystack" && data.accessCode) {
+                const popup = new PaystackPop()
+                popup.resumeTransaction(data.accessCode, {
+                    onSuccess: () => {
+                        setRetrying(false)
+                        setChecking(true)
+                        refreshStatus()
+                    },
+                    onCancel: () => setRetrying(false),
+                    onError: (popupError) => {
+                        setRetryError(popupError?.message || "Paystack could not open. Please try again.")
+                        setRetrying(false)
+                    },
+                })
+                setRetrying(false)
+            } else {
+                window.location.assign(data.checkoutUrl)
+            }
         } catch (requestError) {
             setRetryError(requestError.response?.data?.message || "We couldn't reopen payment. Please try again.")
             setRetrying(false)

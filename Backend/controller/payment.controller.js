@@ -22,6 +22,10 @@ const validAccessToken = (provided, storedHash) => {
     return providedHash.length === savedHash.length && crypto.timingSafeEqual(providedHash, savedHash)
 }
 
+const paymentLaunchData = (payment, orderCode) => payment.provider === "paystack" && payment.accessCode
+    ? { provider: payment.provider, accessCode: payment.accessCode, orderCode }
+    : { provider: payment.provider, checkoutUrl: payment.checkoutUrl, orderCode }
+
 const beginAttempt = async ({ order, provider, accessToken, res }) => {
     const payment = await Payment.create({
         order: order._id,
@@ -34,9 +38,10 @@ const beginAttempt = async ({ order, provider, accessToken, res }) => {
     try {
         const initialized = await initializePayment({ provider, order, payment, accessToken })
         payment.checkoutUrl = initialized.checkoutUrl
+        payment.accessCode = initialized.accessCode || null
         payment.providerTransactionId = initialized.providerTransactionId
         await payment.save()
-        return res.status(201).json({ checkoutUrl: initialized.checkoutUrl, orderCode: order.orderCode })
+        return res.status(201).json(paymentLaunchData(payment, order.orderCode))
     } catch (error) {
         payment.status = "initialization_failed"
         await payment.save()
@@ -82,9 +87,9 @@ const createCheckout = async (req, res) => {
         const checkoutKeyHash = hashAccessToken(checkoutKey)
         const existingOrder = await Order.findOne({ checkoutKeyHash }).select("+accessTokenHash +checkoutKeyHash")
         if (existingOrder) {
-            const latestPayment = await Payment.findOne({ order: existingOrder._id }).sort({ createdAt: -1 })
-            if (latestPayment?.status === "pending" && latestPayment.checkoutUrl) {
-                return res.status(200).json({ checkoutUrl: latestPayment.checkoutUrl, orderCode: existingOrder.orderCode })
+            const latestPayment = await Payment.findOne({ order: existingOrder._id }).select("+accessCode").sort({ createdAt: -1 })
+            if (latestPayment?.status === "pending" && (latestPayment.checkoutUrl || latestPayment.accessCode)) {
+                return res.status(200).json(paymentLaunchData(latestPayment, existingOrder.orderCode))
             }
             if (existingOrder.status === "pending_payment") {
                 return res.status(200).json({
@@ -169,9 +174,9 @@ const createCheckout = async (req, res) => {
             const duplicate = await Order.findOne({ checkoutKeyHash: hashAccessToken(req.body.checkoutKey) })
                 .select("+accessTokenHash +checkoutKeyHash")
             if (duplicate) {
-                const payment = await Payment.findOne({ order: duplicate._id }).sort({ createdAt: -1 })
-                if (payment?.status === "pending" && payment.checkoutUrl) {
-                    return res.status(200).json({ checkoutUrl: payment.checkoutUrl, orderCode: duplicate.orderCode })
+                const payment = await Payment.findOne({ order: duplicate._id }).select("+accessCode").sort({ createdAt: -1 })
+                if (payment?.status === "pending" && (payment.checkoutUrl || payment.accessCode)) {
+                    return res.status(200).json(paymentLaunchData(payment, duplicate.orderCode))
                 }
                 return res.status(200).json({ orderCode: duplicate.orderCode, accessToken: req.body.checkoutKey, status: false })
             }
@@ -329,8 +334,11 @@ const retryPayment = async (req, res) => {
         if (!["paystack", "flutterwave"].includes(provider)) {
             return res.status(400).json({ message: "Choose Paystack or Flutterwave to continue.", status: false })
         }
-        const latestPayment = await Payment.findOne({ order: order._id }).sort({ createdAt: -1 })
+        const latestPayment = await Payment.findOne({ order: order._id }).select("+accessCode").sort({ createdAt: -1 })
         if (latestPayment?.status === "pending") {
+            if (latestPayment.provider === "paystack" && latestPayment.accessCode) {
+                return res.status(200).json(paymentLaunchData(latestPayment, order.orderCode))
+            }
             return res.status(409).json({ message: "A payment attempt is still being confirmed. Refresh the order status before trying again.", status: false })
         }
         return beginAttempt({ order, provider, accessToken: access, res })
